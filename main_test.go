@@ -2,7 +2,6 @@ package requests
 
 import (
     "fmt"
-    "io/ioutil"
     "testing"
 )
 
@@ -14,9 +13,5 @@ func TestRequest_Get(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        t.Fatal(err)
-    }
-    fmt.Println(string(body))
+    fmt.Println(string(resp))
 }
