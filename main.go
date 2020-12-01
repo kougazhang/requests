@@ -1,7 +1,10 @@
 package requests
 
 import (
+    "bytes"
+    "encoding/json"
     "fmt"
+    "io"
     "io/ioutil"
     "net/http"
     "net/url"
@@ -39,8 +42,8 @@ func (r *Request) AddHeader(headers map[string]string) {
     }
 }
 
-func (r Request) Get() (*http.Response, error) {
-    req, err := http.NewRequest(http.MethodGet, r.URL, nil)
+func (r Request) do(method, url string, body io.Reader) ([]byte, error) {
+    req, err := http.NewRequest(method, url, body)
     if err != nil {
         return nil, err
     }
@@ -50,13 +53,31 @@ func (r Request) Get() (*http.Response, error) {
         return nil, err
     }
 
-    if resp.StatusCode/100 != 2 {
-        body, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return nil, err
-        }
-        return nil, fmt.Errorf("StatusCode %d, respBody %s", resp.StatusCode, string(body))
+    respBody, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, err
     }
 
-    return resp, nil
+    if resp.StatusCode/100 != 2 {
+        return nil, fmt.Errorf("StatusCode %d, respBody %s", resp.StatusCode, string(respBody))
+    }
+
+    return respBody, nil
+}
+
+func (r Request) Get() ([]byte, error) {
+    return r.do(http.MethodGet, r.URL, nil)
+}
+
+func (r Request) Post(body io.Reader) ([]byte, error) {
+    return r.do(http.MethodGet, r.URL, body)
+}
+
+func (r Request) PostJson(v interface{}) ([]byte, error) {
+    payload, err := json.Marshal(v)
+    if err != nil {
+        return nil, err
+    }
+
+    return r.Post(bytes.NewReader(payload))
 }
