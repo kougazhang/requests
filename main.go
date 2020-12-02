@@ -8,11 +8,31 @@ import (
     "io/ioutil"
     "net/http"
     "net/url"
+    "time"
 )
 
 type Request struct {
     http.Request
-    URL string
+    URL   string
+    Retry *Retry
+}
+
+type Retry struct {
+    Times    int
+    Interval time.Duration
+}
+
+func (r Retry) do(fun func(method, url string, body io.Reader) ([]byte, error), method, url string, body io.Reader) (
+    res []byte, err error) {
+
+    for i := 0; i < r.Times; i++ {
+        res, err = fun(method, url, body)
+        if err == nil {
+            break
+        }
+        time.Sleep(r.Interval)
+    }
+    return res, err
 }
 
 func (r *Request) AddQuery(queries map[string]string) error {
@@ -65,12 +85,19 @@ func (r Request) do(method, url string, body io.Reader) ([]byte, error) {
     return respBody, nil
 }
 
+func (r Request) Do(method, url string, body io.Reader) ([]byte, error) {
+    if r.Retry != nil {
+        return r.Retry.do(r.do, method, url, body)
+    }
+    return r.do(method, url, body)
+}
+
 func (r Request) Get() ([]byte, error) {
-    return r.do(http.MethodGet, r.URL, nil)
+    return r.Do(http.MethodGet, r.URL, nil)
 }
 
 func (r Request) Post(body io.Reader) ([]byte, error) {
-    return r.do(http.MethodGet, r.URL, body)
+    return r.Do(http.MethodGet, r.URL, body)
 }
 
 func (r Request) PostJson(v interface{}) ([]byte, error) {
