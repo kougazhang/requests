@@ -12,9 +12,9 @@ import (
 )
 
 type Request struct {
-    http.Request
-    URL   string
-    Retry *Retry
+    URL    string
+    Retry  *Retry
+    Header map[string]string
 }
 
 type Retry struct {
@@ -54,18 +54,23 @@ func (r *Request) AddQuery(queries map[string]string) error {
 
 func (r *Request) AddHeader(headers map[string]string) {
     if r.Header == nil {
-        r.Header = make(http.Header)
+        r.Header = make(map[string]string)
     }
 
     for k, v := range headers {
-        r.Header.Add(k, v)
+        r.Header[k] = v
     }
+
 }
 
 func (r Request) do(method, url string, body io.Reader) ([]byte, error) {
     req, err := http.NewRequest(method, url, body)
     if err != nil {
         return nil, err
+    }
+
+    for k, v := range r.Header {
+        req.Header.Add(k, v)
     }
 
     resp, err := http.DefaultClient.Do(req)
@@ -108,7 +113,7 @@ func (r Request) PostJson(v interface{}) ([]byte, error) {
     }
 
     r.AddHeader(map[string]string{
-        "Content-Type": "application/json",
+        "content-type": "application/json",
     })
 
     return r.Post(bytes.NewReader(payload))

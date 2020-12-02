@@ -7,7 +7,7 @@ import (
 
 func TestRequest_Get(t *testing.T) {
     r := Request{
-        URL:     "http://www.baidu.com",
+        URL: "http://www.baidu.com",
     }
     resp, err := r.Get()
     if err != nil {
