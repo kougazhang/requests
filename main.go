@@ -98,7 +98,7 @@ func (r Request) Get() ([]byte, error) {
 }
 
 func (r Request) Post(body io.Reader) ([]byte, error) {
-    return r.Do(http.MethodGet, r.URL, body)
+    return r.Do(http.MethodPost, r.URL, body)
 }
 
 func (r Request) PostJson(v interface{}) ([]byte, error) {
@@ -106,6 +106,10 @@ func (r Request) PostJson(v interface{}) ([]byte, error) {
     if err != nil {
         return nil, err
     }
+
+    r.AddHeader(map[string]string{
+        "Content-Type": "application/json",
+    })
 
     return r.Post(bytes.NewReader(payload))
 }
