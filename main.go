@@ -72,6 +72,7 @@ func (r Request) do(method, url string, body io.Reader) ([]byte, error) {
     if err != nil {
         return nil, err
     }
+    defer req.Body.Close()
 
     respBody, err := ioutil.ReadAll(resp.Body)
     if err != nil {
