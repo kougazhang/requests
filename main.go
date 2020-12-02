@@ -41,11 +41,13 @@ func (r *Request) AddQuery(queries map[string]string) error {
         return err
     }
 
-    values := u.Query()
+    urlQuery := u.Query()
 
     for k, v := range queries {
-        values.Add(k, v)
+        urlQuery.Add(k, v)
     }
+
+    u.RawQuery = urlQuery.Encode()
 
     r.URL = u.String()
 
